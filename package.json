@@ -1,0 +1,25 @@
+{
+  "name": "employee-roster",
+  "version": "1.0.0",
+  "description": "",
+  "main": "employee.js",
+  "dependencies": {
+    "inquirer": "^8.1.2",
+    "mysql": "^2.18.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YueshiaVue/employee-roster.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/YueshiaVue/employee-roster/issues"
+  },
+  "homepage": "https://github.com/YueshiaVue/employee-roster#readme"
+}
