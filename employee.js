@@ -4,40 +4,54 @@ const cTable = require('console.table');
 
 const viewAllDepartmentsPrompt = async() => {
     let departments = await viewAllDepartments()
-              let choices = departments.map( obj=> {
-                  return obj.departmentName
-              })
-              console.table(departments);
-  
-              let {department:departmentName} = await inquirer.prompt([
-                  {
-                      type: "list",
-                      message: "Which department are you looking for?",
-                      choices,
-                      name: "department"
-                  }
-              ])
-  
-              departments.every( async obj=> {
-                  if (departmentName === obj.departmentName) {
-                      let id = obj.id;
-                      let data = await viewAllEmployeeByDepartment(id);
-                      console.table(data);
-                      return false;
-                  }
-                  return true;
-              });
+    let choices = departments.map( obj=> {
+        return obj.departmentName
+    })
+    console.table(departments);
+
+    let {department:departmentName} = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Which department are you looking for?",
+            choices,
+            name: "department"
+        }
+    ])
+
+    departments.every( async obj=> {
+        if (departmentName === obj.departmentName) {
+            let id = obj.id;
+            let data = await viewAllEmployeeByDepartment(id);
+            console.table(data);
+            return false;
+        }
+        return true;
+    });
+    startPrompt();
 }
 
 const addEmployeePrompt = async() => {
+    let id = 0;
     let managerFilter = (await viewAllEmployees()).filter(obj=> {
-        return obj.title.includes('manager') || obj.title.includes('lawyer');
+        console.log('obj',obj);
+        id = obj.id + 1;
+        return obj.title.includes('Manager');
     });
-    let choices = managerFilter.map(({first_name,last_name})=> {
+    let managerIds = {};
+    let choices = managerFilter.map(({first_name,last_name,id})=> {
+        managerIds[`${first_name} ${last_name}`] = id;
         return `${first_name} ${last_name}`;
-    })
-    console.log('employee add** ', employee);
-    let {first,last,role,manager} = await nquirer.prompt([
+    });
+
+    let roleIds = {};
+    let roles = (await getAllRoles()).map(({id, title})=> {
+        roleIds[title] = id;
+        return title
+    }); 
+
+    console.log('managerFilter add** ', managerFilter);
+    console.log('choices add** ', choices);
+    let data = await inquirer.prompt([
         {
             type: "input",
             message: "What is the employee's first name?",
@@ -51,7 +65,7 @@ const addEmployeePrompt = async() => {
         {
             type: "list",
             message: "What is the employee's role?",
-            choices: ["Human Resources", "Sales", "Engineering", "Information Technology", "Accounting", "Legal"],
+            choices:roles,
             name: "role"
         },
         {
@@ -61,9 +75,16 @@ const addEmployeePrompt = async() => {
             name: "manager"
         },
     ]);
-
+    let manager_id = managerIds[data.manager];
+    let role_id = roleIds[data.role];
+    let {first:first_name,last:last_name} = data;
+    
+    await createEmployee({id,first_name,last_name,role_id,manager_id});
+    startPrompt();
 };
 
+
+// Bring back to main menu
 function startPrompt() {
     console.log('starting promt!')
     inquirer.prompt([
@@ -75,18 +96,23 @@ function startPrompt() {
       }
     ])
     .then( async({start}) => {
-      // Use user feedback for... whatever!!
-      console.log('start',start);
+    console.log('start',start)
       switch(start) {
         case "View All Employees":
             viewAllEmployees().then( employee => {
                 console.table(employee)
+                startPrompt();
             });
             break;
         case "View All Employees By Department":
-            return viewAllDepartmentsPrompt();
+            viewAllDepartmentsPrompt();
+            
+            break;
         case "Add Employee":
-            return addEmployeePrompt();
+            console.log('addding employee')
+             addEmployeePrompt();
+            //  startPrompt();
+             break;
         case "Remove Employee":
             break;
         case "Update Employee Role":
@@ -104,7 +130,7 @@ function startPrompt() {
             break;
 
       }
-      startPrompt();
+    //   startPrompt();
     })
     .catch((error) => {
       if (error.isTtyError) {
@@ -128,10 +154,13 @@ function viewAllEmployeeByDepartment (id) {
     return database.findAllEmployeesByDepartment(id);
 }
 
-function createEmployee () {
-    return database.createEmployee();
+function createEmployee (employee) {
+    return database.createEmployee(employee);
 }
 
+function getAllRoles () {
+    return database.findAllRoles();
+}
 
 
 
