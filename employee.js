@@ -32,7 +32,7 @@ const viewAllDepartmentsPrompt = async() => {
 
 const addEmployeePrompt = async() => {
     let id = 0;
-    let managerFilter = (await viewAllEmployees()).filter(obj=> {
+    let managerFilter = ( await viewAllEmployees() ).filter(obj=> {
         console.log('obj',obj);
         id = obj.id + 1;
         return obj.title.includes('Manager');
@@ -83,6 +83,25 @@ const addEmployeePrompt = async() => {
     startPrompt();
 };
 
+const removeEmployeePrompt = async () => {
+    let employee = await viewAllEmployees();
+    let employeeIds = {}
+    let choices = employee.map(({first_name,last_name,id})=> {
+        employeeIds[`${first_name} ${last_name}`] = id;
+        return `${first_name} ${last_name}`;
+    });
+    let data = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Who do you want to remove?",
+            choices, 
+            name: "remove"
+        }
+    ]);
+    let employeeId = employeeIds[data.remove];
+    removeEmployee(employeeId);
+    startPrompt();
+}
 
 // Bring back to main menu
 function startPrompt() {
@@ -114,6 +133,7 @@ function startPrompt() {
             //  startPrompt();
              break;
         case "Remove Employee":
+            removeEmployeePrompt();
             break;
         case "Update Employee Role":
             break;
@@ -160,6 +180,10 @@ function createEmployee (employee) {
 
 function getAllRoles () {
     return database.findAllRoles();
+}
+
+function removeEmployee (employeeId) {
+    return database.removeEmployee(employeeId);
 }
 
 
