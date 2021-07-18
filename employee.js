@@ -1,6 +1,7 @@
 const inquirer = require('inquirer');
 const database = require('./db/index');
 const cTable = require('console.table');
+const { title } = require('process');
 
 const viewAllDepartmentsPrompt = async() => {
     let departments = await viewAllDepartments()
@@ -103,6 +104,48 @@ const removeEmployeePrompt = async () => {
     startPrompt();
 }
 
+const updateEmployeePrompt = async () => {
+    // employees
+    let employee = await viewAllEmployees();
+    let employeeIds = {}
+    let choices = employee.map(({first_name,last_name,id})=> {
+        employeeIds[`${first_name} ${last_name}`] = id;
+
+        return `${first_name} ${last_name}`;
+    });
+    let employeeData = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Who do you want to update?",
+            choices, 
+            name: "update"
+        },
+    ]);
+
+    // role
+    let roles = await getAllRoles();
+    let roleIds = {};
+    let choice = roles.map((obj) => {
+        roleIds[obj.title] = obj.id;
+        return obj.title;
+    });
+    console.log(roleIds);
+    console.log(choice);
+    console.log('hi');
+    let roleData = await inquirer.prompt([
+        {
+            type: "list",
+            message: "What role do you want the employee to be updated?",
+            choices:choice,
+            name: "role"
+        },
+    ]);
+    let employeeId = employeeIds[employeeData.update];
+    let roleId = roleIds[roleData.role];
+    updateEmployeeRole(employeeId, roleId);
+    startPrompt();
+}
+
 // Bring back to main menu
 function startPrompt() {
     console.log('starting promt!')
@@ -130,12 +173,12 @@ function startPrompt() {
         case "Add Employee":
             console.log('addding employee')
              addEmployeePrompt();
-            //  startPrompt();
              break;
         case "Remove Employee":
             removeEmployeePrompt();
             break;
         case "Update Employee Role":
+            updateEmployeePrompt();
             break;
         case "Update Employee Manager":
             break;
@@ -186,6 +229,9 @@ function removeEmployee (employeeId) {
     return database.removeEmployee(employeeId);
 }
 
+function updateEmployeeRole (employeeId, roleId) {
+    return database.updateEmployeeRole(employeeId, roleId);
+}
 
 
 
